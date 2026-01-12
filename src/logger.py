@@ -1,282 +1,287 @@
 """
-Logging module for Binance Futures Trading Bot
-Provides structured logging with timestamps and error tracking
+Enhanced Logging System for Binance Futures Bot
+Provides structured logging with multiple levels and formatters
+Windows-compatible (no emoji encoding issues)
+
+Author: Prajakta Sarkhel
+Date: 2025
 """
 
 import logging
-import json
-import traceback
+import sys
 from datetime import datetime
-from typing import Any, Dict, Optional
-from config import Config
+from pathlib import Path
+from typing import Optional
 
 
 class BotLogger:
-    """Custom logger for trading bot operations"""
+    """Centralized logging system for the trading bot"""
     
-    _logger: Optional[logging.Logger] = None
+    _instance = None
+    _logger = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self, log_file: str = 'bot.log', level: int = logging.DEBUG):
+        """Initialize logger with file and console handlers"""
+        if BotLogger._logger is not None:
+            return
+        
+        # Create logger
+        self.logger = logging.getLogger('BinanceBot')
+        self.logger.setLevel(level)
+        
+        # Prevent duplicate handlers
+        if self.logger.handlers:
+            return
+        
+        # File handler (UTF-8 encoding for emojis)
+        fh = logging.FileHandler(log_file, encoding='utf-8')
+        fh.setLevel(logging.DEBUG)
+        
+        # Console handler (ASCII-safe, no emojis)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.INFO)
+        
+        # File formatter (with emojis for file)
+        file_formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        
+        # Console formatter (ASCII-safe, no emojis)
+        console_formatter = logging.Formatter(
+            '%(levelname)s - %(message)s'
+        )
+        
+        fh.setFormatter(file_formatter)
+        ch.setFormatter(console_formatter)
+        
+        self.logger.addHandler(fh)
+        self.logger.addHandler(ch)
+        
+        BotLogger._logger = self.logger
     
     @classmethod
-    def get_logger(cls, name: str = 'BinanceBot') -> logging.Logger:
-        """
-        Get or create logger instance
-        
-        Args:
-            name: Logger name
-            
-        Returns:
-            Configured logger instance
-        """
+    def get_logger(cls):
+        """Get logger instance"""
         if cls._logger is None:
-            cls._logger = logging.getLogger(name)
-            cls._logger.setLevel(getattr(logging, Config.LOG_LEVEL))
-            
-            # File handler
-            file_handler = logging.FileHandler(Config.LOG_FILE)
-            file_handler.setLevel(logging.DEBUG)
-            file_formatter = logging.Formatter(Config.LOG_FORMAT)
-            file_handler.setFormatter(file_formatter)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.INFO)
-            console_formatter = logging.Formatter('%(levelname)s - %(message)s')
-            console_handler.setFormatter(console_formatter)
-            
-            # Add handlers
-            cls._logger.addHandler(file_handler)
-            cls._logger.addHandler(console_handler)
-        
+            cls()
         return cls._logger
     
-    @classmethod
-    def log_order(cls, order_type: str, symbol: str, side: str, 
-                  quantity: float, price: Optional[float] = None, 
-                  order_id: Optional[int] = None, **kwargs) -> None:
-        """
-        Log order placement
-        
-        Args:
-            order_type: Type of order (MARKET, LIMIT, etc.)
-            symbol: Trading pair
-            side: BUY or SELL
-            quantity: Order quantity
-            price: Order price (if applicable)
-            order_id: Exchange order ID
-            **kwargs: Additional order parameters
-        """
-        logger = cls.get_logger()
-        
-        order_data = {
-            'timestamp': datetime.now().isoformat(),
-            'order_type': order_type,
-            'symbol': symbol,
-            'side': side,
-            'quantity': quantity,
-            'price': price,
-            'order_id': order_id,
-            **kwargs
-        }
-        
-        msg = f"Order placed: {order_type} {symbol} {side} {quantity}"
-        if price:
-            msg += f" @ {price}"
-        if order_id:
-            msg += f" - OrderID: {order_id}"
-        
-        logger.info(msg)
-        logger.debug(f"Order details: {json.dumps(order_data, indent=2)}")
+    @staticmethod
+    def info(message: str):
+        """Log info message"""
+        logger = BotLogger.get_logger()
+        logger.info(message)
     
-    @classmethod
-    def log_execution(cls, order_id: int, symbol: str, side: str,
-                     executed_qty: float, avg_price: float, 
-                     status: str, **kwargs) -> None:
-        """
-        Log order execution
-        
-        Args:
-            order_id: Exchange order ID
-            symbol: Trading pair
-            side: BUY or SELL
-            executed_qty: Executed quantity
-            avg_price: Average execution price
-            status: Order status
-            **kwargs: Additional execution data
-        """
-        logger = cls.get_logger()
-        
-        exec_data = {
-            'timestamp': datetime.now().isoformat(),
-            'order_id': order_id,
-            'symbol': symbol,
-            'side': side,
-            'executed_qty': executed_qty,
-            'avg_price': avg_price,
-            'status': status,
-            **kwargs
-        }
-        
-        msg = f"Order executed: {symbol} {side} {executed_qty} @ {avg_price} - Status: {status}"
-        logger.info(msg)
-        logger.debug(f"Execution details: {json.dumps(exec_data, indent=2)}")
+    @staticmethod
+    def success(message: str):
+        """Log success message (ASCII-safe)"""
+        logger = BotLogger.get_logger()
+        logger.info(f"SUCCESS - {message}")
     
-    @classmethod
-    def log_error(cls, error_type: str, message: str, 
-                  exception: Optional[Exception] = None, **kwargs) -> None:
-        """
-        Log error with traceback
-        
-        Args:
-            error_type: Type of error
-            message: Error message
-            exception: Exception object (if available)
-            **kwargs: Additional error context
-        """
-        logger = cls.get_logger()
-        
-        error_data = {
-            'timestamp': datetime.now().isoformat(),
-            'error_type': error_type,
-            'message': message,
-            **kwargs
-        }
-        
-        if exception:
-            error_data['exception'] = str(exception)
-            error_data['traceback'] = traceback.format_exc()
-        
-        logger.error(f"{error_type}: {message}")
-        logger.debug(f"Error details: {json.dumps(error_data, indent=2)}")
-        
-        if exception:
-            logger.debug(f"Traceback:\n{traceback.format_exc()}")
+    @staticmethod
+    def error(message: str):
+        """Log error message"""
+        logger = BotLogger.get_logger()
+        logger.error(message)
     
-    @classmethod
-    def log_validation(cls, validation_type: str, passed: bool,
-                       details: Dict[str, Any]) -> None:
-        """
-        Log validation results
+    @staticmethod
+    def warning(message: str):
+        """Log warning message"""
+        logger = BotLogger.get_logger()
+        logger.warning(message)
+    
+    @staticmethod
+    def debug(message: str):
+        """Log debug message"""
+        logger = BotLogger.get_logger()
+        logger.debug(message)
+    
+    @staticmethod
+    def critical(message: str):
+        """Log critical message"""
+        logger = BotLogger.get_logger()
+        logger.critical(message)
+    
+    @staticmethod
+    def log_order(order_type: str, symbol: str, side: str, quantity: float, 
+                  price: Optional[float] = None, order_id: Optional[int] = None):
+        """Log order placement (ASCII-safe)"""
+        logger = BotLogger.get_logger()
         
-        Args:
-            validation_type: Type of validation
-            passed: Whether validation passed
-            details: Validation details
-        """
-        logger = cls.get_logger()
+        price_str = f" @ {price}" if price else ""
+        order_id_str = f" (Order ID: {order_id})" if order_id else ""
         
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        msg = f"Validation {status}: {validation_type}"
+        message = f"Order Placed: {order_type} {symbol} {side} {quantity}{price_str}{order_id_str}"
+        logger.info(message)
+    
+    @staticmethod
+    def log_validation(context: str, success: bool, details: dict = None):
+        """Log validation results (ASCII-safe)"""
+        logger = BotLogger.get_logger()
         
-        if passed:
-            logger.info(msg)
+        status = "PASSED" if success else "FAILED"
+        message = f"Validation {status}: {context}"
+        
+        if success:
+            logger.info(message)
         else:
-            logger.warning(msg)
-        
-        logger.debug(f"Validation details: {json.dumps(details, indent=2)}")
+            logger.warning(message)
+            if details:
+                for key, value in details.items():
+                    logger.error(f"{key}: {value}")
     
-    @classmethod
-    def log_strategy(cls, strategy_name: str, action: str, **kwargs) -> None:
-        """
-        Log strategy actions
-        
-        Args:
-            strategy_name: Name of the strategy
-            action: Strategy action taken
-            **kwargs: Additional strategy data
-        """
-        logger = cls.get_logger()
-        
-        strategy_data = {
-            'timestamp': datetime.now().isoformat(),
-            'strategy': strategy_name,
-            'action': action,
-            **kwargs
-        }
-        
-        logger.info(f"Strategy [{strategy_name}]: {action}")
-        logger.debug(f"Strategy details: {json.dumps(strategy_data, indent=2)}")
+    @staticmethod
+    def log_api_call(endpoint: str, method: str = "POST", status: str = "SUCCESS"):
+        """Log API calls"""
+        logger = BotLogger.get_logger()
+        message = f"API Call: {method} {endpoint} - {status}"
+        logger.info(message)
     
-    @classmethod
-    def log_balance(cls, asset: str, balance: float, 
-                   locked: Optional[float] = None) -> None:
-        """
-        Log balance information
+    @staticmethod
+    def log_error_with_trace(error: Exception, context: str = ""):
+        """Log error with traceback"""
+        logger = BotLogger.get_logger()
         
-        Args:
-            asset: Asset symbol
-            balance: Available balance
-            locked: Locked balance (if applicable)
-        """
-        logger = cls.get_logger()
+        if context:
+            logger.error(f"Error in {context}: {str(error)}")
+        else:
+            logger.error(f"Error: {str(error)}")
         
-        msg = f"Balance [{asset}]: Available={balance}"
-        if locked is not None:
-            msg += f", Locked={locked}"
-        
-        logger.info(msg)
+        # Log traceback
+        import traceback
+        logger.debug(f"Traceback: {traceback.format_exc()}")
     
-    @classmethod
-    def log_position(cls, symbol: str, side: str, size: float,
-                    entry_price: float, unrealized_pnl: float) -> None:
-        """
-        Log position information
-        
-        Args:
-            symbol: Trading pair
-            side: LONG or SHORT
-            size: Position size
-            entry_price: Entry price
-            unrealized_pnl: Unrealized PnL
-        """
-        logger = cls.get_logger()
-        
-        pnl_indicator = "📈" if unrealized_pnl >= 0 else "📉"
-        msg = f"Position {pnl_indicator} [{symbol}]: {side} {size} @ {entry_price} | PnL: {unrealized_pnl}"
-        
-        logger.info(msg)
+    @staticmethod
+    def separator(char: str = "=", length: int = 70):
+        """Log separator line"""
+        logger = BotLogger.get_logger()
+        logger.info(char * length)
+    
+    @staticmethod
+    def header(title: str):
+        """Log section header (ASCII-safe)"""
+        logger = BotLogger.get_logger()
+        BotLogger.separator()
+        logger.info(f"  {title}")
+        BotLogger.separator()
 
 
-# Convenience functions
-def log_info(message: str) -> None:
+# Global logger instance
+_global_logger = None
+
+def get_logger(log_file: str = 'bot.log') -> logging.Logger:
+    """Get or create global logger instance"""
+    global _global_logger
+    if _global_logger is None:
+        bot_logger = BotLogger(log_file=log_file)
+        _global_logger = bot_logger.logger
+    return _global_logger
+
+
+def init_logging(log_file: str = 'bot.log', level: int = logging.DEBUG):
+    """Initialize logging system"""
+    global _global_logger
+    bot_logger = BotLogger(log_file=log_file, level=level)
+    _global_logger = bot_logger.logger
+    return _global_logger
+
+
+# Convenience functions (ASCII-safe)
+def log_info(message: str):
     """Log info message"""
-    BotLogger.get_logger().info(message)
+    BotLogger.info(message)
 
+def log_success(message: str):
+    """Log success message (ASCII-safe)"""
+    BotLogger.success(message)
 
-def log_warning(message: str) -> None:
-    """Log warning message"""
-    BotLogger.get_logger().warning(message)
-
-
-def log_error(message: str, exception: Optional[Exception] = None) -> None:
+def log_error(message: str):
     """Log error message"""
-    if exception:
-        BotLogger.log_error('General Error', message, exception)
-    else:
-        BotLogger.get_logger().error(message)
+    BotLogger.error(message)
 
+def log_warning(message: str):
+    """Log warning message"""
+    BotLogger.warning(message)
 
-def log_debug(message: str) -> None:
+def log_debug(message: str):
     """Log debug message"""
-    BotLogger.get_logger().debug(message)
+    BotLogger.debug(message)
 
 
+# ASCII-safe symbols for console output
+class Symbols:
+    """ASCII-safe symbols for Windows console"""
+    CHECK = "[OK]"
+    CROSS = "[X]"
+    ARROW_RIGHT = "->"
+    ARROW_UP = "^"
+    ARROW_DOWN = "v"
+    INFO = "[i]"
+    WARNING = "[!]"
+    ERROR = "[ERR]"
+    SUCCESS = "[SUCCESS]"
+    
+    @staticmethod
+    def format_status(success: bool) -> str:
+        """Format status symbol"""
+        return Symbols.CHECK if success else Symbols.CROSS
+
+
+# Example usage and testing
 if __name__ == "__main__":
-    # Test logging
-    print("Testing logger...\n")
+    # Initialize logger
+    logger = BotLogger()
     
-    logger = BotLogger.get_logger()
+    # Test different log levels
+    BotLogger.header("TESTING LOGGER")
     
-    # Test different log types
-    BotLogger.log_order('MARKET', 'BTCUSDT', 'BUY', 0.01, order_id=12345)
-    BotLogger.log_execution(12345, 'BTCUSDT', 'BUY', 0.01, 50000.0, 'FILLED')
-    BotLogger.log_validation('Symbol Check', True, {'symbol': 'BTCUSDT', 'valid': True})
-    BotLogger.log_strategy('TWAP', 'Executing slice 1/10', quantity=0.1)
-    BotLogger.log_balance('USDT', 1000.50, 250.00)
-    BotLogger.log_position('BTCUSDT', 'LONG', 0.5, 48000.0, 1250.50)
+    BotLogger.info("This is an info message")
+    BotLogger.success("Order executed successfully")
+    BotLogger.warning("Low balance detected")
+    BotLogger.error("API rate limit exceeded")
+    BotLogger.debug("Debug information")
     
+    # Test order logging
+    BotLogger.log_order(
+        order_type="MARKET",
+        symbol="BTCUSDT",
+        side="BUY",
+        quantity=0.001,
+        order_id=123456789
+    )
+    
+    # Test validation logging
+    BotLogger.log_validation(
+        context="Market Order",
+        success=True,
+        details={"symbol": "BTCUSDT", "quantity": 0.001}
+    )
+    
+    BotLogger.log_validation(
+        context="Limit Order",
+        success=False,
+        details={"error": "Invalid price"}
+    )
+    
+    # Test API call logging
+    BotLogger.log_api_call(
+        endpoint="/fapi/v1/order",
+        method="POST",
+        status="SUCCESS"
+    )
+    
+    # Test error with trace
     try:
         raise ValueError("Test error")
     except Exception as e:
-        BotLogger.log_error('Test Error', 'This is a test error', e)
+        BotLogger.log_error_with_trace(e, context="Test Function")
     
-    print("\n✅ Log entries written to bot.log")
+    BotLogger.separator()
+    print("\nLogger test completed. Check bot.log for full output.")
+    print(f"Symbols test: {Symbols.CHECK} {Symbols.CROSS} {Symbols.ARROW_RIGHT}")
