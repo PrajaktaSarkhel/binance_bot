@@ -168,7 +168,7 @@ python src/limit_orders.py ETHUSDT SELL 0.1 3500.00
 Trigger a limit order when price hits stop price:
 
 ```bash
-python src/advanced/stop_limit.py BTCUSDT BUY 0.01 --stop-price 44000 --limit-price 44100
+python src/advanced/stop_limit.py BTCUSDT BUY 0.01 44000 44100
 ```
 
 #### OCO Orders
@@ -176,7 +176,7 @@ python src/advanced/stop_limit.py BTCUSDT BUY 0.01 --stop-price 44000 --limit-pr
 Place take-profit and stop-loss simultaneously:
 
 ```bash
-python src/advanced/oco.py BTCUSDT SELL 0.01 --take-profit 46000 --stop-loss 43000
+python src/advanced/oco.py BTCUSDT SELL 0.01 46000 43000
 ```
 
 #### TWAP Strategy
