@@ -1,100 +1,145 @@
 # Binance Futures Trading Bot
 
-A robust CLI-based trading bot for Binance USDT-M Futures supporting multiple order types with comprehensive logging and validation.
+A comprehensive CLI-based trading bot for Binance USDT-M Futures that supports multiple order types including market, limit, and advanced orders (Stop-Limit, OCO, TWAP, and Grid trading).
 
-## Features
+## ✨ Features
 
-### Core Orders (Implemented)
-- ✅ Market Orders - Immediate execution at current market price
-- ✅ Limit Orders - Execute at specified price or better
+### Core Orders
+- **Market Orders**: Execute instant buy/sell orders at current market price
+- **Limit Orders**: Place orders at specific price levels
 
-### Advanced Orders (Implemented)
-- ✅ Stop-Limit Orders - Trigger limit order when stop price is reached
-- ✅ OCO (One-Cancels-the-Other) - Simultaneous take-profit and stop-loss
-- ✅ TWAP (Time-Weighted Average Price) - Split large orders over time
-- ✅ Grid Trading - Automated buy-low/sell-high strategy
+### Advanced Orders
+- **Stop-Limit Orders**: Trigger limit orders when a stop price is reached
+- **OCO (One-Cancels-the-Other)**: Simultaneously place take-profit and stop-loss orders
+- **TWAP (Time-Weighted Average Price)**: Split large orders into smaller chunks over time
+- **Grid Trading**: Automated buy-low/sell-high strategy within a defined price range
 
-## Project Structure
+### Additional Features
+- Comprehensive input validation (symbol, quantity, price thresholds)
+- Structured logging with timestamps and error traces
+- Position management and monitoring
+- Real-time order status tracking
+- Testnet support for safe testing
+
+## 📁 Project Structure
 
 ```
 binance_bot/
 │
 ├── src/
-│   ├── __init__.py
-│   ├── config.py              # Configuration and API setup
-│   ├── logger.py              # Logging configuration
-│   ├── validator.py           # Input validation
-│   ├── market_orders.py       # Market order implementation
-│   ├── limit_orders.py        # Limit order implementation
+│   ├── market_orders.py          # Market order execution
+│   ├── limit_orders.py            # Limit order placement
+│   ├── config.py                  # Configuration management
+│   ├── logger.py                  # Logging setup
+│   ├── validator.py               # Input validation
+│   ├── utils.py                   # Helper functions
+│   │
 │   └── advanced/
-│       ├── __init__.py
-│       ├── stop_limit.py      # Stop-limit orders
-│       ├── oco.py             # OCO orders
-│       ├── twap.py            # TWAP strategy
-│       └── grid_strategy.py   # Grid trading
+│       ├── stop_limit.py          # Stop-limit order logic
+│       ├── oco.py                 # OCO order implementation
+│       ├── twap.py                # TWAP strategy
+│       └── grid_strategy.py       # Grid trading bot
 │
-├── bot.log                    # Execution logs
-├── report.pdf                 # Analysis and screenshots
-├── README.md                  # This file
-└── requirements.txt           # Python dependencies
+├── tests/
+│   ├── test_market_orders.py
+│   ├── test_limit_orders.py
+│   └── test_advanced_orders.py
+│
+├── bot.log                        # Execution logs
+├── .env.example                   # Environment variables template
+├── .gitignore
+├── requirements.txt               # Python dependencies
+├── README.md                      # This file
+└── report.pdf                     # Analysis and screenshots
 ```
 
-## Setup Instructions
+## 🔧 Prerequisites
 
-### 1. Prerequisites
 - Python 3.8 or higher
-- Binance Futures account
-- API Key with Futures trading permissions
+- Binance account with Futures trading enabled
+- API keys with Futures trading permissions
 
-### 2. Installation
+## 📦 Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/[username]/binance-bot.git
-cd binance-bot
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/PrajaktaSarkhel/binance_bot.git
+   cd binance_bot
+   ```
 
-# Create virtual environment
-python -m venv venv
+2. **Create a virtual environment** (recommended)
+   ```bash
+   python -m venv venv
+   
+   # On Windows
+   venv\Scripts\activate
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
 
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On Linux/Mac:
-source venv/bin/activate
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
-```
+## 🔑 API Setup
 
-### 3. API Configuration
+### Step 1: Create Binance API Keys
 
-Create a `.env` file in the project root:
+1. Log in to your [Binance account](https://www.binance.com/)
+2. Navigate to **API Management** (Profile → API Management)
+3. Click **Create API** and complete security verification
+4. **Important**: Enable the following permissions:
+   - ✅ Enable Futures
+   - ✅ Enable Reading
+   - ✅ Enable Spot & Margin Trading (if needed)
+5. **Save your API Key and Secret Key** securely
 
-```env
-BINANCE_API_KEY=your_api_key_here
-BINANCE_API_SECRET=your_api_secret_here
-TESTNET=True  # Set to False for live trading
-```
+### Step 2: Configure Environment Variables
 
-**⚠️ Security Warning:**
-- Never commit your `.env` file to version control
-- Use testnet for initial testing
-- Start with small amounts on mainnet
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
 
-### 4. Getting API Keys
+2. Edit `.env` and add your credentials:
+   ```env
+   # Binance API Credentials
+   BINANCE_API_KEY=your_api_key_here
+   BINANCE_API_SECRET=your_secret_key_here
+   
+   # Use testnet for safe testing (recommended)
+   USE_TESTNET=True
+   
+   # Testnet credentials (if using testnet)
+   TESTNET_API_KEY=your_testnet_api_key
+   TESTNET_API_SECRET=your_testnet_secret_key
+   ```
 
-1. Log in to Binance
-2. Go to API Management
-3. Create a new API key
-4. Enable "Futures" trading permissions
-5. Whitelist your IP address (recommended)
-6. Save your API key and secret securely
+### Step 3: Testnet Setup (Recommended for Testing)
 
-## Usage
+1. Visit [Binance Futures Testnet](https://testnet.binancefuture.com/)
+2. Create a testnet account
+3. Generate testnet API keys
+4. Use testnet credentials in your `.env` file
+
+⚠️ **Security Warning**: Never commit your `.env` file or expose your API keys publicly!
+
+## ⚙️ Configuration
+
+Edit `src/config.py` to customize bot behavior:
+
+- Order parameters (default quantities, leverage, etc.)
+- Risk management settings
+- Logging preferences
+- API endpoints
+
+## 🚀 Usage
 
 ### Market Orders
 
-Execute immediately at current market price:
+Execute a market order:
 
 ```bash
 # Buy market order
@@ -106,28 +151,24 @@ python src/market_orders.py ETHUSDT SELL 0.1
 
 ### Limit Orders
 
-Execute at specified price or better:
+Place a limit order at a specific price:
 
 ```bash
-# Buy limit order at $50,000
-python src/limit_orders.py BTCUSDT BUY 0.01 50000
+# Buy limit order
+python src/limit_orders.py BTCUSDT BUY 0.01 45000.00
 
-# Sell limit order at $3,500
-python src/limit_orders.py ETHUSDT SELL 0.1 3500
+# Sell limit order
+python src/limit_orders.py ETHUSDT SELL 0.1 3500.00
 ```
 
 ### Advanced Orders
 
 #### Stop-Limit Orders
 
-Trigger a limit order when stop price is reached:
+Trigger a limit order when price hits stop price:
 
 ```bash
-# Stop-loss: Sell if price drops to $49,000 (limit at $48,900)
-python src/advanced/stop_limit.py BTCUSDT SELL 0.01 49000 48900
-
-# Stop-buy: Buy if price rises to $51,000 (limit at $51,100)
-python src/advanced/stop_limit.py BTCUSDT BUY 0.01 51000 51100
+python src/advanced/stop_limit.py BTCUSDT BUY 0.01 --stop-price 44000 --limit-price 44100
 ```
 
 #### OCO Orders
@@ -135,22 +176,15 @@ python src/advanced/stop_limit.py BTCUSDT BUY 0.01 51000 51100
 Place take-profit and stop-loss simultaneously:
 
 ```bash
-# Take profit at $52,000, stop loss at $49,000
-python src/advanced/oco.py BTCUSDT BUY 0.01 52000 49000 49500
-
-# Arguments: symbol, side, quantity, take_profit_price, stop_price, stop_limit_price
+python src/advanced/oco.py BTCUSDT SELL 0.01 --take-profit 46000 --stop-loss 43000
 ```
 
 #### TWAP Strategy
 
-Split large orders into smaller chunks over time:
+Split large orders over time:
 
 ```bash
-# Execute 1 BTC order over 60 minutes (12 intervals of 5 minutes)
-python src/advanced/twap.py BTCUSDT BUY 1.0 --duration 60 --intervals 12
-
-# Execute with custom price limit
-python src/advanced/twap.py ETHUSDT SELL 10.0 --duration 30 --intervals 6 --limit-price 3500
+python src/advanced/twap.py BTCUSDT BUY 1.0 --duration 3600 --intervals 12
 ```
 
 #### Grid Trading
@@ -158,156 +192,136 @@ python src/advanced/twap.py ETHUSDT SELL 10.0 --duration 30 --intervals 6 --limi
 Automated buy-low/sell-high within price range:
 
 ```bash
-# Grid between $48,000-$52,000 with 10 levels, 0.01 BTC per level
-python src/advanced/grid_strategy.py BTCUSDT 48000 52000 10 0.01
-
-# Arguments: symbol, lower_price, upper_price, grid_levels, quantity_per_level
+python src/advanced/grid_strategy.py BTCUSDT --lower 40000 --upper 50000 --grids 10 --quantity 0.01
 ```
 
-## Configuration Options
+## 📊 Order Types Explained
 
-### Environment Variables
+### Market Orders
+Execute immediately at the best available market price. Use for quick entries/exits when price is secondary to speed.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `BINANCE_API_KEY` | Your Binance API key | Required |
-| `BINANCE_API_SECRET` | Your Binance API secret | Required |
-| `TESTNET` | Use testnet (True/False) | True |
-| `LOG_LEVEL` | Logging level (DEBUG/INFO/WARNING/ERROR) | INFO |
+### Limit Orders
+Place orders at specific price levels. The order will only execute if the market reaches your specified price.
 
-### Command Line Options
+### Stop-Limit Orders
+Two-step process: When the market hits your stop price, a limit order is triggered at your specified limit price. Useful for limiting losses or entering breakouts.
 
-Most scripts support:
-- `--help` - Display usage information
-- `--dry-run` - Simulate without executing orders
-- `--verbose` - Enable detailed logging
+### OCO (One-Cancels-the-Other)
+Place two orders simultaneously (typically take-profit and stop-loss). When one executes, the other is automatically cancelled.
 
-## Logging
+### TWAP (Time-Weighted Average Price)
+Split large orders into smaller chunks executed at regular intervals. Reduces market impact and achieves average pricing over time.
 
-All operations are logged to `bot.log` with:
-- Timestamps (ISO 8601 format)
-- Log levels (INFO, WARNING, ERROR)
-- Structured data (JSON format for easy parsing)
-- Error traces with full stack traces
+### Grid Trading
+Automatically place buy and sell orders at predetermined price levels within a range. Profits from price oscillations in ranging markets.
 
-Example log entry:
+## 📝 Logging
+
+All bot activities are logged in `bot.log` with the following structure:
+
 ```
-2025-01-10 15:30:45,123 - INFO - Market order placed: BTCUSDT BUY 0.01 - OrderID: 12345678
-2025-01-10 15:30:45,456 - INFO - Order executed: Price=50123.45, Qty=0.01, Status=FILLED
+2025-01-12 10:30:45 - INFO - Market order placed: BTCUSDT BUY 0.01
+2025-01-12 10:30:46 - SUCCESS - Order executed: Order ID 123456789
+2025-01-12 10:35:22 - ERROR - Invalid symbol: INVALID_SYMBOL
+2025-01-12 10:40:10 - WARNING - Low account balance detected
 ```
 
-## Validation
+Logs include:
+- Timestamps for all actions
+- Order placements and executions
+- API responses and errors
+- Validation failures
+- System warnings
 
-Input validation includes:
-- ✅ Symbol format (must exist on Binance Futures)
-- ✅ Quantity (minimum notional value, tick size)
-- ✅ Price (tick size, percentage filters)
-- ✅ Side (BUY/SELL)
-- ✅ Order type parameters
-- ✅ API credentials
+## 🧪 Testing
 
-## Error Handling
-
-The bot handles:
-- Network errors with retry logic
-- Invalid parameters with clear error messages
-- Insufficient balance warnings
-- API rate limiting (429 errors)
-- Exchange errors with detailed explanations
-
-## Testing
-
-### Testnet Testing
-
-1. Set `TESTNET=True` in `.env`
-2. Get testnet API keys from: https://testnet.binancefuture.com
-3. Run orders without risking real funds
-
-### Dry Run Mode
-
-Test order logic without placing actual orders:
+Run the test suite to verify functionality:
 
 ```bash
-python src/market_orders.py BTCUSDT BUY 0.01 --dry-run
+# Run all tests
+python -m pytest tests/
+
+# Run specific test file
+python -m pytest tests/test_market_orders.py
+
+# Run with verbose output
+python -m pytest -v tests/
 ```
 
-## Safety Features
+**Important**: Always test on Binance Testnet before using real funds!
 
-- 🔒 Testnet mode by default
-- 🔒 Input validation before order placement
-- 🔒 Confirmation prompts for large orders
-- 🔒 Position size limits
-- 🔒 Price deviation checks
+## ⚠️ Error Handling
 
-## Troubleshooting
+The bot implements comprehensive error handling for:
 
-### Common Issues
+- **Invalid Symbols**: Validates trading pairs against Binance exchange info
+- **Insufficient Balance**: Checks account balance before order placement
+- **Price Validation**: Ensures prices meet minimum tick size requirements
+- **Quantity Validation**: Verifies quantities meet minimum order size
+- **API Errors**: Handles rate limits, network errors, and authentication failures
+- **Order Failures**: Logs and reports failed orders with detailed error messages
 
-**"Invalid API key"**
-- Check `.env` file exists and contains correct keys
-- Verify API key has Futures permissions
-- Ensure IP whitelist includes your IP (if enabled)
+## 📋 Requirements
 
-**"Insufficient balance"**
-- Transfer funds to Futures wallet
-- Reduce order quantity
-- Check margin requirements
-
-**"Symbol not found"**
-- Verify symbol format (e.g., BTCUSDT not BTC/USDT)
-- Check symbol is available on Binance Futures
-- Ensure symbol is in USDT-M Futures (not Coin-M)
-
-**Rate limiting errors**
-- Reduce order frequency
-- Implement delays between requests
-- Use websocket streams instead of REST polling
-
-## Performance
-
-- Order execution: < 500ms average
-- TWAP accuracy: ±2% of target schedule
-- Grid rebalancing: < 1 second per level
-- Logging overhead: < 5ms per operation
-
-## Dependencies
+Main dependencies (see `requirements.txt` for complete list):
 
 ```
-python-binance==1.0.19
-python-dotenv==1.0.0
-requests==2.31.0
+python-binance>=1.0.17
+python-dotenv>=1.0.0
+requests>=2.31.0
+pandas>=2.0.0
+pytest>=7.4.0
 ```
 
-## Contributing
+## 🛡️ Risk Management
 
-This is an assignment project. For questions or issues, contact the instructor.
+**Trading involves significant risk. Please consider the following:**
 
-## License
+- Start with small amounts and use testnet first
+- Never invest more than you can afford to lose
+- Use stop-loss orders to limit potential losses
+- Monitor your positions regularly
+- Understand leverage risks in futures trading
+- Keep your API keys secure and use IP whitelisting
 
-Educational use only. Not for production trading without proper review.
-
-## Disclaimer
-
-⚠️ **Trading involves substantial risk of loss. This bot is for educational purposes only.**
-
-- Always test on testnet first
-- Start with small amounts
-- Never risk more than you can afford to lose
-- Cryptocurrency trading carries high risk
-- Past performance doesn't guarantee future results
-- The developers assume no liability for trading losses
-
-## Resources
+## 📄 Documentation
 
 - [Binance Futures API Documentation](https://binance-docs.github.io/apidocs/futures/en/)
-- [Python-Binance Library](https://python-binance.readthedocs.io/)
-- [Binance Testnet](https://testnet.binancefuture.com/)
+- [Project Report](report.pdf) - Detailed analysis with screenshots and explanations
+- Check `bot.log` for execution history
 
-## Support
+## 🤝 Contributing
 
-For assignment-related questions, contact: [instructor_email]
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📧 Contact
+
+Prajakta Sarkhel - [GitHub](https://github.com/PrajaktaSarkhel)
+
+Project Link: [https://github.com/PrajaktaSarkhel/binance_bot](https://github.com/PrajaktaSarkhel/binance_bot)
+
+## ⚖️ Disclaimer
+
+**THIS SOFTWARE IS FOR EDUCATIONAL PURPOSES ONLY.**
+
+This trading bot is provided as-is without any guarantees or warranty. The authors are not responsible for any financial losses incurred through the use of this software. Cryptocurrency trading carries substantial risk of loss and is not suitable for all investors. Always do your own research and consult with a financial advisor before trading.
+
+By using this bot, you acknowledge that:
+- You are solely responsible for your trading decisions
+- Past performance does not guarantee future results
+- You understand the risks involved in cryptocurrency futures trading
+- You will comply with all applicable laws and regulations
+
+## 📜 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-**Version:** 1.0.0  
-**Last Updated:** January 2025
+**⭐ If you find this project helpful, please consider giving it a star!**
