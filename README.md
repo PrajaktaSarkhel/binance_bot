@@ -1,4 +1,4 @@
-# Binance Futures Trading Bot
+<img width="1919" height="1022" alt="image" src="https://github.com/user-attachments/assets/e5f296d1-11d5-4db5-ab3f-8ae61e62f546" /># Binance Futures Trading Bot
 
 A comprehensive CLI-based trading bot for Binance USDT-M Futures that supports multiple order types including market, limit, and advanced orders (Stop-Limit, OCO, TWAP, and Grid trading).
 
@@ -192,7 +192,7 @@ python src/advanced/twap.py BTCUSDT BUY 1.0 --duration 3600 --intervals 12
 Automated buy-low/sell-high within price range:
 
 ```bash
-python src/advanced/grid_strategy.py BTCUSDT --lower 40000 --upper 50000 --grids 10 --quantity 0.01
+python src/advanced/grid_strategy.py BTCUSDT 40000 50000 10 0.01
 ```
 
 ## 📊 Order Types Explained
