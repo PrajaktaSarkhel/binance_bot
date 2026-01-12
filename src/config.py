@@ -11,10 +11,15 @@ from typing import Optional
 
 # Load environment variables
 load_dotenv()
-
+print("DEBUG ENV:", {
+    "DRY_RUN": os.getenv("DRY_RUN"),
+    "TESTNET": os.getenv("TESTNET"),
+    "API_KEY_SET": bool(os.getenv("BINANCE_API_KEY")),
+})
 
 class Config:
     """Configuration class for the trading bot"""
+    DRY_RUN = os.getenv('DRY_RUN', 'True').lower() == 'true'
     
     # API Configuration
     API_KEY = os.getenv('BINANCE_API_KEY', '')
@@ -40,10 +45,14 @@ class Config:
     
     @classmethod
     def validate(cls) -> bool:
-        """Validate configuration settings"""
+        if cls.DRY_RUN:
+            return True
+
         if not cls.API_KEY or not cls.API_SECRET:
             raise ValueError("API_KEY and API_SECRET must be set in .env file")
+
         return True
+
 
 
 class BinanceClientManager:
@@ -73,7 +82,8 @@ class BinanceClientManager:
                     Config.API_SECRET,
                     testnet=True
                 )
-                cls._client.API_URL = Config.TESTNET_BASE_URL
+                cls._client.FUTURES_URL = Config.TESTNET_BASE_URL
+
                 print("⚠️  Using TESTNET - No real funds at risk")
             else:
                 cls._client = Client(
@@ -86,22 +96,20 @@ class BinanceClientManager:
     
     @classmethod
     def test_connection(cls) -> bool:
-        """
-        Test API connection and credentials
-        
-        Returns:
-            True if connection successful
-        """
+        if Config.DRY_RUN:
+            print("⚠️  DRY RUN enabled — API calls are simulated")
+            return True
+
         try:
             client = cls.get_client()
             client.futures_ping()
             account = client.futures_account()
-            print(f"✅ Connected successfully")
-            print(f"Account Balance: {account.get('totalWalletBalance', 'N/A')} USDT")
+            print("✅ Connected successfully")
             return True
         except BinanceAPIException as e:
             print(f"❌ API Error: {e.message}")
             return False
+
         except Exception as e:
             print(f"❌ Connection Error: {str(e)}")
             return False
@@ -114,24 +122,18 @@ class BinanceClientManager:
     
     @classmethod
     def get_balance(cls, asset: str = 'USDT') -> float:
-        """
-        Get balance for specific asset
-        
-        Args:
-            asset: Asset symbol (default: USDT)
-            
-        Returns:
-            Available balance
-        """
+        if Config.DRY_RUN:
+            return 10000.0
+
         client = cls.get_client()
         account = client.futures_account()
-        
+
         for balance in account['assets']:
             if balance['asset'] == asset:
                 return float(balance['availableBalance'])
-        
+
         return 0.0
-    
+
     @classmethod
     def get_position(cls, symbol: str) -> dict:
         """
@@ -156,8 +158,8 @@ def print_banner():
     """Print application banner"""
     banner = """
     ╔══════════════════════════════════════════════════════╗
-    ║     Binance Futures Trading Bot v1.0               ║
-    ║     Educational Purpose Only - Use at Your Risk     ║
+    ║     Binance Futures Trading Bot v1.0                 ║
+    ║     Educational Purpose Only - Use at Your Risk      ║
     ╚══════════════════════════════════════════════════════╝
     """
     print(banner)
